@@ -1,0 +1,32 @@
+# Python
+__pycache__/
+*.py[cod]
+*.egg-info/
+.venv/
+.pytest_cache/
+.ruff_cache/
+
+# Jupyter
+.ipynb_checkpoints/
+
+# Environments
+.env
+
+# Data — never commit data to git
+data/
+!data/.gitkeep
+
+# Model artifacts — too large for git
+checkpoints/
+outputs/
+*.pth
+*.ckpt
+
+# W&B local cache
+wandb/
+
+# OS / IDE
+.DS_Store
+.vscode/
+.idea/
+*.swp
