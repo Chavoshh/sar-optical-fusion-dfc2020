@@ -1,0 +1,149 @@
+{
+  "source": "DFC2020 validation set (986 patches)",
+  "computed_at": "2026-05-30T13:49:07",
+  "sample_pixels_per_patch": 5000,
+  "s1": {
+    "vv": {
+      "mean": -13.945772484564902,
+      "std": 4.329233395499759,
+      "p1": -23.1779629006734,
+      "p99": -4.163986938351393
+    },
+    "vh": {
+      "mean": -21.53799356068288,
+      "std": 6.001187183581624,
+      "p1": -34.389700092667304,
+      "p99": -11.792486201460324
+    }
+  },
+  "s2": {
+    "b1": {
+      "mean": 1353.9014135902637,
+      "std": 170.2274898493051,
+      "p1": 1062.0,
+      "p99": 1895.0
+    },
+    "b2": {
+      "mean": 1094.3479121703854,
+      "std": 245.98706435984647,
+      "p1": 740.0,
+      "p99": 1885.0
+    },
+    "b3": {
+      "mean": 999.5548196754564,
+      "std": 299.41859065003274,
+      "p1": 466.0,
+      "p99": 1957.0
+    },
+    "b4": {
+      "mean": 810.864038336714,
+      "std": 476.76782852692577,
+      "p1": 249.0,
+      "p99": 2465.0
+    },
+    "b5": {
+      "mean": 1072.2074038539554,
+      "std": 499.0037184901617,
+      "p1": 211.0,
+      "p99": 2678.0
+    },
+    "b6": {
+      "mean": 1894.1190369168357,
+      "std": 1056.6463390582596,
+      "p1": 178.0,
+      "p99": 3651.0
+    },
+    "b7": {
+      "mean": 2211.502829208925,
+      "std": 1336.2664470771867,
+      "p1": 157.0,
+      "p99": 4512.0
+    },
+    "b8": {
+      "mean": 2111.8429985801217,
+      "std": 1299.5631651926753,
+      "p1": 129.0,
+      "p99": 4342.0
+    },
+    "b8a": {
+      "mean": 2370.311512576065,
+      "std": 1490.034685160454,
+      "p1": 120.0,
+      "p99": 4866.0
+    },
+    "b9": {
+      "mean": 637.7280184584179,
+      "std": 397.64248189393857,
+      "p1": 62.0,
+      "p99": 1670.0
+    },
+    "b10": {
+      "mean": 10.844657809330629,
+      "std": 4.597213112105912,
+      "p1": 5.0,
+      "p99": 28.0
+    },
+    "b11": {
+      "mean": 1611.0863614604461,
+      "std": 1095.0777865268467,
+      "p1": 47.0,
+      "p99": 4484.0
+    },
+    "b12": {
+      "mean": 962.2811180527383,
+      "std": 803.6810945388044,
+      "p1": 33.0,
+      "p99": 3491.0
+    }
+  },
+  "classes": {
+    "total_labeled_pixels": 64618496,
+    "per_class_count": {
+      "1": 5904112,
+      "2": 3353501,
+      "5": 11272496,
+      "6": 8405224,
+      "7": 3517590,
+      "9": 1887823,
+      "4": 7655859,
+      "10": 22621891
+    },
+    "present_classes": [
+      1,
+      2,
+      4,
+      5,
+      6,
+      7,
+      9,
+      10
+    ],
+    "missing_classes": [
+      0,
+      3,
+      8
+    ],
+    "class_names": {
+      "0": "No data",
+      "1": "Forest",
+      "2": "Shrubland",
+      "3": "Savanna",
+      "4": "Grassland",
+      "5": "Wetlands",
+      "6": "Croplands",
+      "7": "Urban",
+      "8": "Snow/Ice",
+      "9": "Barren",
+      "10": "Water"
+    }
+  },
+  "notes": [
+    "S1 values are dB-scaled backscatter (float64 in source, cast to float32 in pipeline).",
+    "S2 values are uint16 reflectance * 10000.",
+    "B10 has near-zero dynamic range (mean ~11, std ~5) \u2014 recommended to drop in dataset class.",
+    "Class 3 (Savanna) and class 8 (Snow/Ice) are absent \u2014 treat as 8-class problem.",
+    "Class 0 (No data) does not appear in any patch \u2014 no ignore_index needed.",
+    "Recommend per-channel clip to [p1, p99] then z-score normalize.",
+    "Recommend class-weighted loss due to 12x imbalance ratio (Water dominant)."
+  ]
+}
