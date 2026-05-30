@@ -28,7 +28,7 @@ The aim is an honest, reproducible ablation on consumer hardware (single GTX 105
 
 Environment is fully pinned via `uv.lock`. To reproduce:
 
-\\\ash
+\\Bash
 git clone https://github.com/Chavoshh/sar-optical-fusion-dfc2020.git
 cd sar-optical-fusion-dfc2020
 uv sync
