@@ -14,7 +14,7 @@ __pycache__/
 
 # Data — never commit data to git
 data/
-!data/.gitkeep
+!data/README.md
 
 # Model artifacts — too large for git
 checkpoints/
