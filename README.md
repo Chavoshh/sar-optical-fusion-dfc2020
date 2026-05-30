@@ -8,6 +8,8 @@ A comparative study of fusion strategies for combining Sentinel-1 SAR and Sentin
 
 ## Dataset
 
+> Exploration notebook: [`notebooks/01_data_exploration.ipynb`](notebooks/01_data_exploration.ipynb) ([view on nbviewer](https://nbviewer.org/github/Chavoshh/sar-optical-fusion-dfc2020/blob/main/notebooks/01_data_exploration.ipynb) if GitHub's renderer fails)
+
 This project uses the **2020 IEEE GRSS Data Fusion Contest** dataset — paired Sentinel-1 SAR and Sentinel-2 optical imagery with land cover labels, distributed as 256 × 256 patches.
 
 | Split | Patches | Modalities per patch |
