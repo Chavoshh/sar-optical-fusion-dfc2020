@@ -24,6 +24,22 @@ All S1/S2/label triples are pixel-aligned; pairing is by patch ID.
 Exploratory analysis across all 986 validation patches (see `notebooks/01_data_exploration.ipynb`) produced the dataset statistics used throughout the project (`src/sar_optical_fusion/data/dataset_stats.json`). Key findings:
 
 - **Effective 8-class problem.** Although DFC2020 nominally defines 10 land cover classes, the validation set contains zero pixels of class 3 (Savanna) and class 8 (Snow / Ice). The 8 classes actually present are: Forest, Shrubland, Grassland, Wetlands, Croplands, Urban, Barren, and Water. This matches the official challenge evaluation scheme.
+- ### Class index mapping
+
+To produce contiguous indices for `CrossEntropyLoss`, the 8 present raw DFC class IDs are remapped:
+
+| Train index | Raw DFC ID | Class | Pixel share |
+| --- | --- | --- | --- |
+| 0 | 1 | Forest | 9.1% |
+| 1 | 2 | Shrubland | 5.2% |
+| 2 | 4 | Grassland | 11.8% |
+| 3 | 5 | Wetlands | 17.4% |
+| 4 | 6 | Croplands | 13.0% |
+| 5 | 7 | Urban | 5.4% |
+| 6 | 9 | Barren | 2.9% |
+| 7 | 10 | Water | 35.0% |
+
+Mapping follows the convention in Schmitt et al. (2020), making results directly comparable to published DFC2020 baselines. The mapping is defined as `RAW_TO_TRAIN_ID` in `src/sar_optical_fusion/data/dataset.py`.
 - **Significant class imbalance.** Water dominates at 35% of labeled pixels; Barren is the rarest present class at 2.9%, giving a 12× imbalance ratio. Class-weighted cross-entropy is used to compensate.
 - **S2 band B10 (cirrus) carries no surface information.** Dataset-wide mean ≈ 11, std ≈ 5 — effectively constant. It is excluded from model input, reducing S2 from 13 to 12 channels.
 - **Per-channel outlier clipping.** Both modalities contain rare extreme values (S1 backscatter outside ±30 dB; S2 reflectance > 1.0 after scaling). Inputs are clipped to the dataset-wide p1–p99 range before standardization.
