@@ -1,0 +1,7 @@
+name: unet_s1
+architecture: unet
+encoder_name: resnet18
+encoder_weights: imagenet
+in_channels: 2
+modality: s1
+model_input_keys: ["s1"]

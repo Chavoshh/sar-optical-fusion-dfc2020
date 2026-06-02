@@ -1,0 +1,10 @@
+# @package _global_
+# This experiment uses the default unet_s2 model, dfc2020 dataset, default training.
+# It does not need to override anything; it exists to give the run a name.
+
+defaults:
+  - override /model: unet_s2
+
+experiment:
+  name: s2_only
+  description: "Baseline 1: U-Net on Sentinel-2 only (12 bands, B10 dropped)"

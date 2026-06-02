@@ -1,0 +1,25 @@
+# Default training hyperparameters
+name: default
+
+# Schedule
+num_epochs: 30
+warmup_epochs: 0
+
+# Optimizer
+optimizer: adamw
+lr: 1.0e-3
+weight_decay: 1.0e-4
+
+# Loss
+loss: weighted_ce                  # "ce" or "weighted_ce"
+
+# Mixed precision
+amp: true                          # essential for 4 GB VRAM
+
+# Checkpointing
+checkpoint_dir: checkpoints
+log_every_n_steps: 50
+
+# W&B
+use_wandb: true
+wandb_project: sar-optical-fusion-dfc2020

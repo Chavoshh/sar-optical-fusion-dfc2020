@@ -1,0 +1,26 @@
+# Top-level Hydra config.
+#
+# Compose an experiment with:
+#   uv run python scripts/train.py experiment=s2_only
+#
+# Override individual fields with normal dotted paths:
+#   uv run python scripts/train.py experiment=s2_only training.num_epochs=5
+
+defaults:
+  - _self_
+  - dataset: dfc2020
+  - model: unet_s2
+  - training: default
+  - experiment: s2_only          # an experiment can override any of the above
+  - override hydra/job_logging: default
+
+# Project-wide
+project_name: sar-optical-fusion-dfc2020
+seed: 42
+device: cuda
+
+hydra:
+  run:
+    dir: outputs/${experiment.name}/${now:%Y-%m-%d_%H-%M-%S}
+  job:
+    chdir: false

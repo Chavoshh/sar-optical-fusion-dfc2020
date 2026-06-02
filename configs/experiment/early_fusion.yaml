@@ -1,0 +1,8 @@
+# @package _global_
+
+defaults:
+  - override /model: unet_early_fusion
+
+experiment:
+  name: early_fusion
+  description: "Fusion 1: U-Net with S1+S2 concatenated at input (14 channels)"

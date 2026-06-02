@@ -1,0 +1,74 @@
+{
+  "method": "inverse_sqrt_frequency_normalized",
+  "source_split": "train",
+  "source_n_patches": 789,
+  "total_pixels": 51707904,
+  "per_class": [
+    {
+      "train_id": 0,
+      "name": "Forest",
+      "pixel_count": 4625601,
+      "frequency": 0.08945636241608246,
+      "weight": 0.96960746809886
+    },
+    {
+      "train_id": 1,
+      "name": "Shrubland",
+      "pixel_count": 2755595,
+      "frequency": 0.053291562543320264,
+      "weight": 1.2562392023704032
+    },
+    {
+      "train_id": 2,
+      "name": "Grassland",
+      "pixel_count": 6065405,
+      "frequency": 0.11730131238736731,
+      "weight": 0.8467401114504088
+    },
+    {
+      "train_id": 3,
+      "name": "Wetlands",
+      "pixel_count": 9086043,
+      "frequency": 0.1757186483520972,
+      "weight": 0.6918192498260886
+    },
+    {
+      "train_id": 4,
+      "name": "Croplands",
+      "pixel_count": 6779494,
+      "frequency": 0.13111136742266713,
+      "weight": 0.8009057204387184
+    },
+    {
+      "train_id": 5,
+      "name": "Urban",
+      "pixel_count": 2819907,
+      "frequency": 0.05453531823684054,
+      "weight": 1.241831417930495
+    },
+    {
+      "train_id": 6,
+      "name": "Barren",
+      "pixel_count": 1500576,
+      "frequency": 0.029020244177756654,
+      "weight": 1.7023585562910761
+    },
+    {
+      "train_id": 7,
+      "name": "Water",
+      "pixel_count": 18075283,
+      "frequency": 0.3495651844638684,
+      "weight": 0.4904982735939491
+    }
+  ],
+  "weights": [
+    0.96960746809886,
+    1.2562392023704032,
+    0.8467401114504088,
+    0.6918192498260886,
+    0.8009057204387184,
+    1.241831417930495,
+    1.7023585562910761,
+    0.4904982735939491
+  ]
+}

@@ -1,0 +1,18 @@
+# DFC2020 dataset configuration
+name: dfc2020
+
+# Paths
+data_root: data/raw/ROIs0000_validation
+split_path: src/sar_optical_fusion/data/splits.json
+test_data_root: data/raw/ROIs0000_test    # held-out, used in Phase 7
+
+# Split name suffix used in folder names (s1_validation, dfc_validation, etc.)
+split_name: validation
+
+# Augmentation
+augmentation: d4                   # "d4" (HFlip+VFlip+Rot90), "none"
+
+# DataLoader
+batch_size: 8                      # increase if VRAM allows; smoke test confirms 2 works
+num_workers: 2                     # parallel patch loading
+pin_memory: true

@@ -1,0 +1,8 @@
+# @package _global_
+
+defaults:
+  - override /model: unet_s1
+
+experiment:
+  name: s1_only
+  description: "Baseline 2: U-Net on Sentinel-1 only (VV+VH, dB-scaled)"
