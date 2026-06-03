@@ -6,6 +6,39 @@ A comparative study of fusion strategies for combining Sentinel-1 SAR and Sentin
 
 ## Project goals
 
+## Status & current results
+
+### Phase 3 (in progress): Baseline 1 — S2-only U-Net
+
+A ResNet-18 U-Net trained on Sentinel-2 only (12 bands, B10 dropped), class-weighted cross-entropy, 30 epochs, batch size 16, AdamW with cosine learning-rate schedule, mixed-precision training.
+
+| Metric | Value |
+| --- | --- |
+| Best val mCA (mean class accuracy) | **0.7765** |
+| Best val pixel accuracy | 0.842 |
+| Best val mean IoU | 0.646 |
+| Training time | 13.2 min (GTX 1050 Ti, 4 GB VRAM) |
+| Parameters | 14.36 M |
+
+Per-class recall on the 197-patch validation set:
+
+| Class | Recall |
+| --- | --- |
+| Forest | 0.944 |
+| Shrubland | 0.410 |
+| Grassland | 0.624 |
+| Wetlands | 0.806 |
+| Croplands | 0.748 |
+| Urban | 0.874 |
+| Barren | 0.813 |
+| Water | 0.994 |
+
+Shrubland is the hardest class, consistent with all published DFC2020 work. It is spectrally a continuum with Grassland (sparse vegetation) and the 10 m Sentinel-2 resolution often produces mixed pixels. Barren (the rarest class at 2.9% of training pixels) is recovered at 81% recall, which is the class-weighted loss compensating for the 12× class imbalance.
+
+[W&B run](https://wandb.ai/chavosh-personal/sar-optical-fusion-dfc2020/runs/f1rh7skn)
+
+Next: S1-only baseline, then early fusion, then late fusion. All four models will be evaluated on the held-out 5128-patch test set in Phase 7.
+
 ## Dataset
 
 > Exploration notebook: [`notebooks/01_data_exploration.ipynb`](notebooks/01_data_exploration.ipynb) ([view on nbviewer](https://nbviewer.org/github/Chavoshh/sar-optical-fusion-dfc2020/blob/main/notebooks/01_data_exploration.ipynb) if GitHub's renderer fails)
