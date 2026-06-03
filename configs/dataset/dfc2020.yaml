@@ -13,6 +13,6 @@ split_name: validation
 augmentation: d4                   # "d4" (HFlip+VFlip+Rot90), "none"
 
 # DataLoader
-batch_size: 8                      # increase if VRAM allows; smoke test confirms 2 works
+batch_size: 16                      # increase if VRAM allows; smoke test confirms 2 works
 num_workers: 2                     # parallel patch loading
 pin_memory: true
