@@ -10,10 +10,10 @@ A comparative study of fusion strategies for combining Sentinel-1 SAR and Sentin
 
 Train and compare four U-Net-based segmentation models on the DFC2020 benchmark, using identical training infrastructure so any performance differences reflect the modality choice and not implementation details:
 
-1. **S1-only** baseline — Sentinel-1 SAR (VV + VH).
-2. **S2-only** baseline — Sentinel-2 optical (12 bands; B10 dropped).
-3. **Early fusion** — channel-wise concatenation of S1 and S2 at the input.
-4. **Late fusion** — dual-encoder architecture with feature-level fusion.
+1. **S1-only** baseline: Sentinel-1 SAR (VV + VH).
+2. **S2-only** baseline: Sentinel-2 optical (12 bands; B10 dropped).
+3. **Early fusion**: channel-wise concatenation of S1 and S2 at the input.
+4. **Late fusion**: dual-encoder architecture with feature-level fusion.
 
 The central research question: **does SAR-optical fusion help, and if so, where does the gain come from?** The single-modality baselines establish what each sensor contributes alone, so the fusion models can be evaluated against the *better* of the two — not against a strawman.
 
@@ -59,7 +59,7 @@ Per-class recall on the 197-patch validation set:
 | Barren | 0.639 | 0.813 | +0.175 |
 | Water | 0.987 | 0.994 | +0.007 |
 
-**Key finding.** Sentinel-1 outperforms Sentinel-2 on Shrubland — the only class where SAR wins — by 4.1 percentage points. C-band cross-polarized backscatter encodes structural information about woody vegetation (branch density, surface roughness) that the Sentinel-2 spectral signature does not capture, especially at 10 m resolution where shrub patches often produce mixed pixels.
+**Key finding.** Sentinel-1 outperforms Sentinel-2 on Shrubland (the only class where SAR wins) by 4.1 percentage points. C-band cross-polarized backscatter encodes structural information about woody vegetation (branch density, surface roughness) that the Sentinel-2 spectral signature does not capture, especially at 10 m resolution where shrub patches often produce mixed pixels.
 
 This complementarity motivates the fusion experiments in Phases 5 and 6: can a fused model preserve S1's Shrubland advantage while retaining S2's strength on the spectrally separable classes?
 
