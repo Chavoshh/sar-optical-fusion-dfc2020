@@ -2,13 +2,13 @@
 
 A comparative study of fusion strategies for combining Sentinel-1 SAR and Sentinel-2 optical imagery for land cover semantic segmentation, evaluated on the [2020 IEEE GRSS Data Fusion Contest](https://ieee-dataport.org/competitions/2020-ieee-grss-data-fusion-contest) benchmark.
 
-**Status:** Phase 1 complete — data inventory, exploration, and dataset statistics. Phase 2 (data pipeline) in progress.
+**Status:** Phase 1 complete - data inventory, exploration, and dataset statistics. Phase 2 (data pipeline) in progress.
 
 ## Project goals
 
 ## Status & current results
 
-### Phase 3 (in progress): Baseline 1 — S2-only U-Net
+### Phase 3 (in progress): Baseline 1 - S2-only U-Net
 
 A ResNet-18 U-Net trained on Sentinel-2 only (12 bands, B10 dropped), class-weighted cross-entropy, 30 epochs, batch size 16, AdamW with cosine learning-rate schedule, mixed-precision training.
 
@@ -57,7 +57,7 @@ All S1/S2/label triples are pixel-aligned; pairing is by patch ID.
 Exploratory analysis across all 986 validation patches (see `notebooks/01_data_exploration.ipynb`) produced the dataset statistics used throughout the project (`src/sar_optical_fusion/data/dataset_stats.json`). Key findings:
 
 - **Effective 8-class problem.** Although DFC2020 nominally defines 10 land cover classes, the validation set contains zero pixels of class 3 (Savanna) and class 8 (Snow / Ice). The 8 classes actually present are: Forest, Shrubland, Grassland, Wetlands, Croplands, Urban, Barren, and Water. This matches the official challenge evaluation scheme.
-- ### Class index mapping
+- **Class index mapping.**
 
 To produce contiguous indices for `CrossEntropyLoss`, the 8 present raw DFC class IDs are remapped:
 
@@ -74,7 +74,7 @@ To produce contiguous indices for `CrossEntropyLoss`, the 8 present raw DFC clas
 
 Mapping follows the convention in Schmitt et al. (2020), making results directly comparable to published DFC2020 baselines. The mapping is defined as `RAW_TO_TRAIN_ID` in `src/sar_optical_fusion/data/dataset.py`.
 - **Significant class imbalance.** Water dominates at 35% of labeled pixels; Barren is the rarest present class at 2.9%, giving a 12× imbalance ratio. Class-weighted cross-entropy is used to compensate.
-- **S2 band B10 (cirrus) carries no surface information.** Dataset-wide mean ≈ 11, std ≈ 5 — effectively constant. It is excluded from model input, reducing S2 from 13 to 12 channels.
+- **S2 band B10 (cirrus) carries no surface information.** Dataset-wide mean ≈ 11, std ≈ 5  (effectively constant). It is excluded from model input, reducing S2 from 13 to 12 channels.
 - **Per-channel outlier clipping.** Both modalities contain rare extreme values (S1 backscatter outside ±30 dB; S2 reflectance > 1.0 after scaling). Inputs are clipped to the dataset-wide p1–p99 range before standardization.
 - **No "no data" pixels.** Class 0 does not appear, so no `ignore_index` is required in the loss function.
 
