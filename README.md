@@ -46,8 +46,6 @@ Both baselines use a ResNet-18 U-Net, class-weighted cross-entropy, 30 epochs, b
 
 W&B runs: [S1-only](https://wandb.ai/chavosh-personal/sar-optical-fusion-dfc2020/runs/mqszt3tn) · [S2-only](https://wandb.ai/chavosh-personal/sar-optical-fusion-dfc2020/runs/f1rh7skn) · [Early fusion](https://wandb.ai/chavosh-personal/sar-optical-fusion-dfc2020/runs/rygom44l)
 
-W&B runs: [S1-only](https://wandb.ai/chavosh-personal/sar-optical-fusion-dfc2020/runs/mqszt3tn) · [S2-only](https://wandb.ai/chavosh-personal/sar-optical-fusion-dfc2020/runs/f1rh7skn)
-
 Per-class recall on the 197-patch validation set:
 
 | Class | S1 | S2 | Early fusion | Δ (fusion − best single) |
