@@ -67,8 +67,6 @@ Per-class recall on the 197-patch validation set:
 
 **Key findings.**
 
-**Key findings.**
-
 *Sentinel-1 carries information Sentinel-2 misses for woody vegetation.* Among single-modality models, S1 outperformed S2 only on Shrubland (45.1 % vs 41.0 %). C-band cross-polarized backscatter encodes branch density and surface roughness; structural features that the Sentinel-2 spectral signature does not capture, especially at 10 m resolution where shrub patches often produce mixed pixels.
 
 *Fusion delivers real gains, and architecture matters.* Channel-concatenation early fusion improved mCA by +2.8 points over the best single modality (S2). A dual-encoder late-fusion architecture added a further +1.1 points, for a total gain of +3.9 points over S2 alone. The improvements concentrate on the classes where modality complementarity is highest: Shrubland gained +21.9 points (S2 → late) and Grassland gained +5.5 points. Spectrally separable classes that were already strong (Forest, Water, Urban) saw little change.
@@ -76,8 +74,6 @@ Per-class recall on the 197-patch validation set:
 *One class regresses, honestly noted.* Barren is the only class where the dual-encoder model is below the S2-only baseline (−1.4 points). With S1's relatively weak signal on this class and only 2.9 % of training pixels, the SAR encoder appears to inject more noise than signal. This is a known cost of architectural fusion and would be addressed by class-aware gating in a follow-up.
 
 *Caveat on parameter count.* The late-fusion model has ≈ 26 M parameters versus ≈ 14 M for the other three. Some of its gain may be attributable to capacity rather than architecture. A direct control with a larger single-encoder backbone (e.g., ResNet-34, ~21 M params) is a planned ablation.
-
-### Coming next
 
 ### Coming next
 
