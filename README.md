@@ -50,8 +50,6 @@ W&B runs: [S1-only](https://wandb.ai/chavosh-personal/sar-optical-fusion-dfc2020
 
 Per-class recall on the 197-patch validation set:
 
-Per-class recall on the 197-patch validation set:
-
 | Class | S1 | S2 | Early fusion | Δ (fusion − best single) |
 | --- | --- | --- | --- | --- |
 | Forest | 0.924 | 0.944 | 0.957 | +0.013 |
