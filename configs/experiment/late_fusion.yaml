@@ -1,0 +1,8 @@
+# @package _global_
+
+defaults:
+  - override /model: unet_late_fusion
+
+experiment:
+  name: late_fusion
+  description: "Fusion 2: Dual-encoder U-Net with per-scale concatenation+1x1conv fusion"

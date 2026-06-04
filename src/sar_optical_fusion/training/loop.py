@@ -94,32 +94,42 @@ def train_one_epoch(
     model.train()
     running_loss = 0.0
     running_n = 0
+    is_dual = len(cfg.model_input_keys) == 2 and cfg.extra_config.get(
+        "fusion_type", "early"
+    ) == "late"
     pbar = tqdm(loader, desc=f"Epoch {epoch} train", leave=False)
     for step, batch in enumerate(pbar):
         batch = _move_to_device(batch, device)
-        x = _stack_inputs(batch, cfg.model_input_keys)
         y = batch["label"]
 
         optimizer.zero_grad(set_to_none=True)
-        #if scaler is not None:
-           # with torch.cuda.amp.autocast():
-              #  logits = model(x)
-               # loss = loss_fn(logits, y)
         if scaler is not None:
             with torch.amp.autocast("cuda"):
-                logits = model(x)
+                if is_dual:
+                    logits = model(batch[cfg.model_input_keys[0]],
+                                   batch[cfg.model_input_keys[1]])
+                else:
+                    x = _stack_inputs(batch, cfg.model_input_keys)
+                    logits = model(x)
                 loss = loss_fn(logits, y)
             scaler.scale(loss).backward()
             scaler.step(optimizer)
             scaler.update()
         else:
-            logits = model(x)
+            if is_dual:
+                logits = model(batch[cfg.model_input_keys[0]],
+                               batch[cfg.model_input_keys[1]])
+            else:
+                x = _stack_inputs(batch, cfg.model_input_keys)
+                logits = model(x)
             loss = loss_fn(logits, y)
             loss.backward()
             optimizer.step()
 
-        running_loss += loss.item() * x.size(0)
-        running_n += x.size(0)
+        # batch size for averaging - pick from any tensor in the batch
+        n = y.size(0)
+        running_loss += loss.item() * n
+        running_n += n
         if step % cfg.log_every_n_steps == 0:
             pbar.set_postfix(loss=f"{loss.item():.4f}")
 
@@ -140,14 +150,22 @@ def evaluate(
     cm = ConfusionMatrixAccumulator(n_classes)
     running_loss = 0.0
     running_n = 0
+    is_dual = len(cfg.model_input_keys) == 2 and cfg.extra_config.get(
+        "fusion_type", "early"
+    ) == "late"
     for batch in tqdm(loader, desc="Validating", leave=False):
         batch = _move_to_device(batch, device)
-        x = _stack_inputs(batch, cfg.model_input_keys)
         y = batch["label"]
-        logits = model(x)
+        if is_dual:
+            logits = model(batch[cfg.model_input_keys[0]],
+                           batch[cfg.model_input_keys[1]])
+        else:
+            x = _stack_inputs(batch, cfg.model_input_keys)
+            logits = model(x)
         loss = loss_fn(logits, y)
-        running_loss += loss.item() * x.size(0)
-        running_n += x.size(0)
+        n = y.size(0)
+        running_loss += loss.item() * n
+        running_n += n
         pred = logits.argmax(dim=1)
         cm.update(y, pred)
     return cm.compute(), running_loss / max(running_n, 1)

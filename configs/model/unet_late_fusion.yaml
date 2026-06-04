@@ -1,0 +1,9 @@
+name: unet_late_fusion
+architecture: dual_encoder_unet
+encoder_name: resnet18
+encoder_weights: imagenet
+in_channels_a: 2       # S1: VV, VH
+in_channels_b: 12      # S2: 12 bands (B10 dropped)
+modality: fusion       # dataset returns both
+model_input_keys: ["s1", "s2"]
+fusion_type: late

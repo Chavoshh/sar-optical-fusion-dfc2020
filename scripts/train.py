@@ -101,13 +101,25 @@ def main(cfg: DictConfig) -> None:
     # Data
     train_loader, val_loader = build_dataloaders(cfg)
 
-    # Model
-    model = build_unet(
-        in_channels=cfg.model.in_channels,
-        n_classes=N_CLASSES,
-        encoder_name=cfg.model.encoder_name,
-        encoder_weights=cfg.model.encoder_weights,
-    )
+   # Model — dispatch on architecture
+    if cfg.model.architecture == "unet":
+        model = build_unet(
+            in_channels=cfg.model.in_channels,
+            n_classes=N_CLASSES,
+            encoder_name=cfg.model.encoder_name,
+            encoder_weights=cfg.model.encoder_weights,
+        )
+    elif cfg.model.architecture == "dual_encoder_unet":
+        from sar_optical_fusion.models.dual_encoder_unet import build_dual_encoder_unet
+        model = build_dual_encoder_unet(
+            encoder_name=cfg.model.encoder_name,
+            encoder_weights=cfg.model.encoder_weights,
+            in_channels_a=cfg.model.in_channels_a,
+            in_channels_b=cfg.model.in_channels_b,
+            n_classes=N_CLASSES,
+        )
+    else:
+        raise ValueError(f"Unknown architecture: {cfg.model.architecture!r}")
     total, trainable = count_parameters(model)
     print(f"Model: {cfg.model.name}  ({total/1e6:.2f}M params, "
           f"{trainable/1e6:.2f}M trainable)")
@@ -132,6 +144,7 @@ def main(cfg: DictConfig) -> None:
         seed=cfg.seed,
         amp=cfg.training.amp,
         extra_config={
+            "fusion_type": cfg.model.get("fusion_type", "early"),
             "model": OmegaConf.to_container(cfg.model, resolve=True),
             "dataset": OmegaConf.to_container(cfg.dataset, resolve=True),
             "training": OmegaConf.to_container(cfg.training, resolve=True),

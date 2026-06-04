@@ -2,7 +2,8 @@
 
 A comparative study of fusion strategies for combining Sentinel-1 SAR and Sentinel-2 optical imagery for land cover semantic segmentation, evaluated on the [2020 IEEE GRSS Data Fusion Contest](https://ieee-dataport.org/competitions/2020-ieee-grss-data-fusion-contest) benchmark.
 
-**Status:** Phase 3 in progress. Two single-modality baselines (S1, S2) trained and evaluated; fusion experiments next.
+**Status:** 
+Phases 3 through 6 complete. All four U-Net variants trained and evaluated on the validation set. Test-set evaluation (Phase 7) is next.
 
 ---
 
@@ -15,7 +16,7 @@ Train and compare four U-Net-based segmentation models on the DFC2020 benchmark,
 3. **Early fusion**: channel-wise concatenation of S1 and S2 at the input.
 4. **Late fusion**: dual-encoder architecture with feature-level fusion.
 
-The central research question: **does SAR-optical fusion help, and if so, where does the gain come from?** The single-modality baselines establish what each sensor contributes alone, so the fusion models can be evaluated against the *better* of the two — not against a strawman.
+The central research question: **does SAR-optical fusion help, and if so, where does the gain come from?** The single-modality baselines establish what each sensor contributes alone, so the fusion models can be evaluated against the *better* of the two, not against a strawman.
 
 A stretch goal in Phase 8 is to add predictive uncertainty quantification (MC-Dropout or ensembles) to the best fusion model, since reliable confidence estimation is a known weak spot in operational EO products.
 
@@ -35,43 +36,54 @@ The project is built to run on consumer hardware (single GTX 1050 Ti, 4 GB VRAM)
 
 Both baselines use a ResNet-18 U-Net, class-weighted cross-entropy, 30 epochs, batch size 16, AdamW with cosine LR, mixed-precision. Only input modality and channel count differ.
 
-| Metric | S1-only (2 ch) | S2-only (12 ch) | Early fusion (14 ch) |
-| --- | --- | --- | --- |
-| Best val mCA | 0.714 | 0.777 | **0.805** |
-| Best val pixel accuracy | 0.787 | 0.842 | 0.855 |
-| Best val mean IoU | 0.560 | 0.646 | 0.679 |
-| Best epoch | 29 / 30 | 30 / 30 | 30 / 30 |
-| Training time | 11.9 min | 13.2 min | 13.0 min |
-| Parameters | 14.33 M | 14.36 M | 14.36 M |
+| Metric | S1-only | S2-only | Early fusion | Late fusion |
+| --- | --- | --- | --- | --- |
+| Best val mCA | 0.714 | 0.777 | 0.805 | **0.816** |
+| Best val pixel accuracy | 0.787 | 0.842 | 0.855 | 0.864 |
+| Best val mean IoU | 0.560 | 0.646 | 0.679 | 0.695 |
+| Best epoch | 29 / 30 | 30 / 30 | 30 / 30 | 29 / 30 |
+| Training time | 11.9 min | 13.2 min | 13.0 min | 16.8 min |
+| Parameters | 14.33 M | 14.36 M | 14.36 M | 26.24 M |
 
-W&B runs: [S1-only](https://wandb.ai/chavosh-personal/sar-optical-fusion-dfc2020/runs/mqszt3tn) · [S2-only](https://wandb.ai/chavosh-personal/sar-optical-fusion-dfc2020/runs/f1rh7skn) · [Early fusion](https://wandb.ai/chavosh-personal/sar-optical-fusion-dfc2020/runs/rygom44l)
+W&B runs:
+[S1-only](https://wandb.ai/chavosh-personal/sar-optical-fusion-dfc2020/runs/mqszt3tn) ·
+[S2-only](https://wandb.ai/chavosh-personal/sar-optical-fusion-dfc2020/runs/f1rh7skn) ·
+[Early fusion](https://wandb.ai/chavosh-personal/sar-optical-fusion-dfc2020/runs/rygom44l) ·
+[Late fusion](https://wandb.ai/chavosh-personal/sar-optical-fusion-dfc2020/runs/87hhz7gm)
+Per-class recall on the 197-patch validation set:
 
 Per-class recall on the 197-patch validation set:
 
-| Class | S1 | S2 | Early fusion | Δ (fusion − best single) |
+| Class | S1 | S2 | Early fusion | Late fusion |
 | --- | --- | --- | --- | --- |
-| Forest | 0.924 | 0.944 | 0.957 | +0.013 |
-| Shrubland | 0.451 | 0.410 | **0.597** | **+0.146** |
-| Grassland | 0.630 | 0.624 | 0.635 | +0.005 |
-| Wetlands | 0.643 | 0.806 | 0.796 | −0.010 |
-| Croplands | 0.619 | 0.748 | 0.768 | +0.020 |
-| Urban | 0.804 | 0.874 | 0.894 | +0.020 |
-| Barren | 0.639 | 0.813 | 0.795 | −0.018 |
-| Water | 0.987 | 0.994 | 0.995 | +0.001 |
+| Forest | 0.924 | 0.944 | 0.957 | 0.947 |
+| Shrubland | 0.451 | 0.410 | 0.597 | **0.629** |
+| Grassland | 0.630 | 0.624 | 0.635 | 0.679 |
+| Wetlands | 0.643 | 0.806 | 0.796 | 0.811 |
+| Croplands | 0.619 | 0.748 | 0.768 | 0.770 |
+| Urban | 0.804 | 0.874 | 0.894 | 0.900 |
+| Barren | 0.639 | 0.813 | 0.795 | 0.799 |
+| Water | 0.987 | 0.994 | 0.995 | 0.995 |
 
 **Key findings.**
 
-*Sentinel-1 carries information Sentinel-2 misses for woody vegetation.* Among single-modality models, S1 outperformed S2 only on Shrubland (45.1 % vs 41.0 %). C-band cross-polarized backscatter encodes branch density and surface roughness — structural features that the Sentinel-2 spectral signature does not capture, especially at 10 m resolution where shrub patches often produce mixed pixels.
+**Key findings.**
 
-*Early fusion exploits the complementarity.* Concatenating S1 (2 ch) and S2 (12 ch) at the input of a single U-Net improved Shrubland recall by 14.6 percentage points over the better of the two single-modality models. Six of eight classes improved over S2 alone; Wetlands (−1.0) and Barren (−1.8) regressed slightly, the latter likely an artifact of S1's weaker signal on a rare class (2.9 % of pixels). Overall, fusion improved mCA by +2.8 points over S2 alone.
+*Sentinel-1 carries information Sentinel-2 misses for woody vegetation.* Among single-modality models, S1 outperformed S2 only on Shrubland (45.1 % vs 41.0 %). C-band cross-polarized backscatter encodes branch density and surface roughness; structural features that the Sentinel-2 spectral signature does not capture, especially at 10 m resolution where shrub patches often produce mixed pixels.
 
-*The remaining ceiling.* Shrubland is still the worst class at 59.7 %. Whether a more sophisticated fusion architecture (Phase 6 dual-encoder late fusion) can push it higher is the central remaining question of the comparative study.
+*Fusion delivers real gains, and architecture matters.* Channel-concatenation early fusion improved mCA by +2.8 points over the best single modality (S2). A dual-encoder late-fusion architecture added a further +1.1 points, for a total gain of +3.9 points over S2 alone. The improvements concentrate on the classes where modality complementarity is highest: Shrubland gained +21.9 points (S2 → late) and Grassland gained +5.5 points. Spectrally separable classes that were already strong (Forest, Water, Urban) saw little change.
+
+*One class regresses, honestly noted.* Barren is the only class where the dual-encoder model is below the S2-only baseline (−1.4 points). With S1's relatively weak signal on this class and only 2.9 % of training pixels, the SAR encoder appears to inject more noise than signal. This is a known cost of architectural fusion and would be addressed by class-aware gating in a follow-up.
+
+*Caveat on parameter count.* The late-fusion model has ≈ 26 M parameters versus ≈ 14 M for the other three. Some of its gain may be attributable to capacity rather than architecture. A direct control with a larger single-encoder backbone (e.g., ResNet-34, ~21 M params) is a planned ablation.
 
 ### Coming next
 
-- **Phase 6:** Late fusion (dual-encoder architecture; modality-specific feature extractors).
-- **Phase 7:** All four models evaluated on the held-out 5,128-patch test set.
-- **Phase 8 (stretch):** Predictive uncertainty quantification on the best model.
+### Coming next
+
+- **Phase 7:** All four models evaluated on the held-out 5,128-patch test set. Test-set performance is the answer the project actually exists to provide.
+- **Phase 8 (stretch):** Predictive uncertainty quantification (MC-Dropout) on the best fusion model.
+- **Planned ablations:** larger single-encoder backbone (ResNet-34) to disentangle capacity from architecture; class-aware gating for the Barren regression.
 
 ## Dataset
 
