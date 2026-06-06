@@ -1,0 +1,32 @@
+{
+  "checkpoint": "checkpoints\\late_fusion\\best.pt",
+  "n_test_patches": 5128,
+  "test_pixel_accuracy": 0.6332189943786717,
+  "test_mean_class_accuracy": 0.523002685037104,
+  "test_mean_iou": 0.38091124059660375,
+  "test_per_class_accuracy": {
+    "Forest": 0.6367552722978694,
+    "Shrubland": 0.5838336798854561,
+    "Grassland": 0.35835331338974896,
+    "Wetlands": 0.05326623310177026,
+    "Croplands": 0.3467015026680845,
+    "Urban": 0.823142256608558,
+    "Barren": 0.38882736526259265,
+    "Water": 0.9931418570827517
+  },
+  "test_per_class_iou": {
+    "Forest": 0.5767899213956349,
+    "Shrubland": 0.18509267809391128,
+    "Grassland": 0.22379230792343913,
+    "Wetlands": 0.04330501092521574,
+    "Croplands": 0.2532662609237365,
+    "Urban": 0.6253822167878237,
+    "Barren": 0.15855334489729841,
+    "Water": 0.9811081838257704
+  },
+  "train_val_mca": 0.8163200989365026,
+  "train_best_epoch": 29,
+  "architecture": "dual_encoder_unet",
+  "modality": "fusion",
+  "fusion_type": "late"
+}

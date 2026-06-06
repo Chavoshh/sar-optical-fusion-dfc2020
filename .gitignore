@@ -1,4 +1,4 @@
-# Python
+﻿# Python
 __pycache__/
 *.py[cod]
 *.egg-info/
@@ -12,12 +12,17 @@ __pycache__/
 # Environments
 .env
 
-# Data — never commit data to git
+# Data - never commit data to git
 data/
 !data/README.md
 
-# Model artifacts — too large for git
-checkpoints/
+# Model artifacts - large weights and binary matrices ignored,
+# but small JSON result files are kept in version control.
+checkpoints/**
+!checkpoints/
+!checkpoints/*/
+!checkpoints/*/test_metrics.json
+!checkpoints/*/history.json
 outputs/
 *.pth
 *.ckpt
