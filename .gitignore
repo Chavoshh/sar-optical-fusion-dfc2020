@@ -1,4 +1,4 @@
-﻿# Python
+# Python
 __pycache__/
 *.py[cod]
 *.egg-info/
@@ -23,7 +23,14 @@ checkpoints/**
 !checkpoints/*/
 !checkpoints/*/test_metrics.json
 !checkpoints/*/history.json
-outputs/
+
+# Output figures and intermediate analysis files
+outputs/**
+!outputs/
+!outputs/figures/
+!outputs/figures/*.png
+!outputs/selected_test_patches.json
+
 *.pth
 *.ckpt
 

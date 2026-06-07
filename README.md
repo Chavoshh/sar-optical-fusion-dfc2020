@@ -1,85 +1,113 @@
 ﻿# SAR-Optical Fusion for Land Cover Segmentation (DFC2020)
 
-A comparative study of fusion strategies for combining Sentinel-1 SAR and Sentinel-2 optical imagery for land cover semantic segmentation, evaluated on the [2020 IEEE GRSS Data Fusion Contest](https://ieee-dataport.org/competitions/2020-ieee-grss-data-fusion-contest) benchmark.
+A comparative study of four U-Net variants for combining Sentinel-1 SAR and Sentinel-2 optical imagery for land cover semantic segmentation, evaluated on the [2020 IEEE GRSS Data Fusion Contest](https://ieee-dataport.org/competitions/2020-ieee-grss-data-fusion-contest) benchmark.
 
-**Status:** 
-Phases 3 through 6 complete. All four U-Net variants trained and evaluated on the validation set. Test-set evaluation (Phase 7) is next.
+**Status:** Phases 0–7 complete. Four models trained on the official validation set, single-shot evaluation on the held-out 5,128-patch test set, qualitative prediction figures, and full per-class analysis.
 
 ---
 
 ## Project goals
 
-Train and compare four U-Net-based segmentation models on the DFC2020 benchmark, using identical training infrastructure so any performance differences reflect the modality choice and not implementation details:
+Train and compare four U-Net-based segmentation models on DFC2020, using identical training infrastructure so any performance differences reflect the modality or fusion choice and not implementation details:
 
-1. **S1-only** baseline: Sentinel-1 SAR (VV + VH).
-2. **S2-only** baseline: Sentinel-2 optical (12 bands; B10 dropped).
-3. **Early fusion**: channel-wise concatenation of S1 and S2 at the input.
-4. **Late fusion**: dual-encoder architecture with feature-level fusion.
+1. **S1-only** baseline: Sentinel-1 SAR (VV + VH, 2 channels).
+2. **S2-only** baseline: Sentinel-2 optical (12 channels; B10 dropped).
+3. **Early fusion**: channel-wise concatenation of S1 and S2 at the input (14 channels).
+4. **Late fusion**: dual-encoder architecture with per-scale concatenation + 1×1 conv fusion.
 
-The central research question: **does SAR-optical fusion help, and if so, where does the gain come from?** The single-modality baselines establish what each sensor contributes alone, so the fusion models can be evaluated against the *better* of the two, not against a strawman.
-
-A stretch goal in Phase 8 is to add predictive uncertainty quantification (MC-Dropout or ensembles) to the best fusion model, since reliable confidence estimation is a known weak spot in operational EO products.
+The central research question: **does SAR-optical fusion help, where do the gains come from, and how does the val-set picture survive on a held-out region?**
 
 ## Approach
 
 The project is built to run on consumer hardware (single GTX 1050 Ti, 4 GB VRAM) with full reproducibility. Key design decisions:
 
-- **Identical training pipeline across all four models.** Same loss, optimizer, schedule, augmentation, and train/val split. Only the model architecture and input channel count change.
-- **Honest evaluation.** Class weights computed on the training partition only (not on the full validation set). Best-model selection by mean class accuracy, not pixel accuracy, to avoid rewarding models that ignore minority classes.
-- **Empirically selected split seed.** Seeds 0–99 were scored on per-class pixel-distribution preservation; seed 53 (max class deviation 0.96 %) was selected, well below the default seed 42 at 9.28 %.
+- **Identical training pipeline across all four models.** Same loss, optimizer, schedule, augmentation, and train/val split. Only the model architecture and input channels change.
+- **Honest evaluation.** Class weights computed on the training partition only. Best-model selection by mean class accuracy (mCA), not pixel accuracy, to avoid rewarding models that ignore minority classes. The test set is touched once, after training, with no hyperparameter adjustments.
+- **Empirically selected split seed.** Seeds 0–99 were scored on per-class pixel-distribution preservation; seed 53 (max class deviation 0.96 %) was selected over the default seed 42 at 9.28 %.
 - **Mixed-precision training (AMP)** to fit the U-Net on 4 GB VRAM at batch size 16.
-- **No domain-specific tricks.** Standard ResNet-18 encoder with ImageNet pre-init, AdamW, cosine LR schedule, D4 augmentation (flips + 90° rotations). Results are intended to be a clean reference, not a leaderboard chase.
+- **Standard architectures, no domain-specific tricks.** ResNet-18 encoder with ImageNet pre-init, AdamW, cosine LR schedule, D4 augmentation (flips + 90° rotations). Results are intended to be a clean reference, not a leaderboard chase.
 
 ## Results
 
-### Single-modality baselines (Phase 3)
+### Test-set results (held-out region, 5,128 patches)
 
-Both baselines use a ResNet-18 U-Net, class-weighted cross-entropy, 30 epochs, batch size 16, AdamW with cosine LR, mixed-precision. Only input modality and channel count differ.
+These are the primary results of the project. The ranking is consistent with validation, the absolute numbers are substantially lower, and the per-class structure is where the interesting story lives.
+
+| Metric | S1-only | S2-only | Early fusion | Late fusion |
+| --- | --- | --- | --- | --- |
+| Test mean class accuracy (mCA) | 0.430 | 0.494 | 0.510 | **0.523** |
+| Test pixel accuracy (PA) | 0.532 | 0.604 | 0.622 | **0.633** |
+| Test mean IoU | 0.290 | 0.353 | 0.361 | **0.381** |
+| Parameters | 14.33 M | 14.36 M | 14.36 M | 26.24 M |
+
+![Per-class test recall for all four models](outputs/figures/per_class_comparison.png)
+
+Per-class test recall on the 5,128-patch test set:
+
+| Class | S1 | S2 | Early | Late |
+| --- | --- | --- | --- | --- |
+| Forest | 0.456 | 0.600 | **0.658** | 0.637 |
+| Shrubland | 0.226 | 0.504 | 0.562 | **0.584** |
+| Grassland | **0.365** | 0.315 | 0.333 | 0.358 |
+| Wetlands | 0.074 | 0.061 | 0.013 | 0.053 |
+| Croplands | 0.202 | 0.327 | 0.297 | **0.347** |
+| Urban | 0.811 | 0.757 | 0.790 | **0.823** |
+| Barren | 0.331 | 0.391 | **0.436** | 0.389 |
+| Water | 0.977 | 0.993 | 0.992 | 0.993 |
+
+### Key findings
+
+**1. The architectural progression holds on test.** S1 < S2 < Early < Late is the same ordering observed on validation. Late fusion's +1.3 mCA over early fusion (val gap was +1.1) is preserved across the geographic shift, which is the strongest signal that the dual-encoder structure represents a real architectural improvement rather than a val-set artifact.
+
+**2. Fusion's main win is Shrubland.** S1 alone struggles on this class (recall 0.226 on test); S2 alone manages 0.504; late fusion reaches 0.584. C-band cross-polarized backscatter encodes structural information about woody vegetation (branch density, surface roughness) that the Sentinel-2 spectral signature misses, especially at 10 m resolution where shrub patches often produce mixed pixels. This complementarity is the project's clearest empirical contribution.
+
+**3. Wetlands collapses universally on test.** All four models score under 0.08 recall on Wetlands, with early fusion at 0.013. This is not an architecture problem. The class label spans visually heterogeneous land covers (salt marshes, riparian forests, peat bogs, flooded grasslands) and the training-set wetlands appear visually different from the test-set wetlands. No architectural fix can recover from a label-distribution shift this severe; only more diverse training data or domain-adaptation techniques would help.
+
+**4. The val-to-test gap is large and almost uniform across models.** Every model loses 28–30 mCA points moving from validation to test. The gap doesn't favor any one architecture, which suggests the bottleneck is dataset diversity rather than model capacity or fusion strategy. The implication: improvements at the architecture level will plateau without complementary work on training-data coverage.
+
+### Qualitative figures
+
+Three test patches were selected to illustrate different aspects of the comparison:
+
+- **Shrubland + Forest patch (p3055)**: where fusion clearly wins. The dual-encoder model produces a noticeably cleaner Shrubland/Forest boundary than S2 alone, with less spurious Barren prediction.
+  ![Shrubland-Forest comparison](outputs/figures/prediction_grid_shrubland_rich.png)
+
+- **Wetlands-dominant patch (p3624)**: universal failure mode. None of the four models correctly identifies the marshland as Wetlands; the SAR-only model labels most of it as Urban, while the optical and fusion models predict Forest or Grassland.
+  ![Wetlands failure mode](outputs/figures/prediction_grid_wetlands_heavy.png)
+
+- **Urban + Water patch (p2363)**: saturated easy case. All four models recover the coastline and city extent. S2-only catches fine intra-urban detail (small vegetated patches) that the fusion models smooth over — an interesting case where fusion's regularization slightly hurts on a class where it isn't needed.
+  ![Urban-Water saturated case](outputs/figures/prediction_grid_urban_water_mix.png)
+
+### Validation results (for reference)
 
 | Metric | S1-only | S2-only | Early fusion | Late fusion |
 | --- | --- | --- | --- | --- |
 | Best val mCA | 0.714 | 0.777 | 0.805 | **0.816** |
-| Best val pixel accuracy | 0.787 | 0.842 | 0.855 | 0.864 |
-| Best val mean IoU | 0.560 | 0.646 | 0.679 | 0.695 |
-| Best epoch | 29 / 30 | 30 / 30 | 30 / 30 | 29 / 30 |
-| Training time | 11.9 min | 13.2 min | 13.0 min | 16.8 min |
-| Parameters | 14.33 M | 14.36 M | 14.36 M | 26.24 M |
+| Best val PA | 0.787 | 0.842 | 0.855 | 0.864 |
+| Best val mIoU | 0.560 | 0.646 | 0.679 | 0.695 |
 
 W&B runs:
 [S1-only](https://wandb.ai/chavosh-personal/sar-optical-fusion-dfc2020/runs/mqszt3tn) ·
 [S2-only](https://wandb.ai/chavosh-personal/sar-optical-fusion-dfc2020/runs/f1rh7skn) ·
 [Early fusion](https://wandb.ai/chavosh-personal/sar-optical-fusion-dfc2020/runs/rygom44l) ·
 [Late fusion](https://wandb.ai/chavosh-personal/sar-optical-fusion-dfc2020/runs/87hhz7gm)
-Per-class recall on the 197-patch validation set:
 
-Per-class recall on the 197-patch validation set:
+## Limitations and honest framing
 
-| Class | S1 | S2 | Early fusion | Late fusion |
-| --- | --- | --- | --- | --- |
-| Forest | 0.924 | 0.944 | 0.957 | 0.947 |
-| Shrubland | 0.451 | 0.410 | 0.597 | **0.629** |
-| Grassland | 0.630 | 0.624 | 0.635 | 0.679 |
-| Wetlands | 0.643 | 0.806 | 0.796 | 0.811 |
-| Croplands | 0.619 | 0.748 | 0.768 | 0.770 |
-| Urban | 0.804 | 0.874 | 0.894 | 0.900 |
-| Barren | 0.639 | 0.813 | 0.795 | 0.799 |
-| Water | 0.987 | 0.994 | 0.995 | 0.995 |
+A portfolio project should be honest about what it does and does not show. The findings above come with three caveats worth stating explicitly:
 
-### Key findings
+**Parameter count is a confound for the early-vs-late comparison.** Late fusion has 26 M parameters versus 14 M for the other three models. Some of its +1.3 mCA improvement over early fusion may reflect added capacity rather than the dual-encoder architecture per se. The clean control would be a single-encoder model with a wider backbone (e.g., ResNet-34, ~21 M parameters), a planned ablation listed below.
 
-- *Sentinel-1 carries information Sentinel-2 misses for woody vegetation.* Among single-modality models, S1 outperformed S2 only on Shrubland (45.1 % vs 41.0 %). C-band cross-polarized backscatter encodes branch density and surface roughness; structural features that the Sentinel-2 spectral signature does not capture, especially at 10 m resolution where shrub patches often produce mixed pixels.
+**Barren regresses on test.** Late fusion's Barren recall (0.389) is below S2-only's (0.391). Across both val and test, the SAR signal for this class appears to inject more noise than it removes, and the dual-encoder model fails to learn to gate it. A class-aware fusion module (per-class learned modality weights) is the natural follow-up.
 
-- *Fusion delivers real gains, and architecture matters.* Channel-concatenation early fusion improved mCA by +2.8 points over the best single modality (S2). A dual-encoder late-fusion architecture added a further +1.1 points, for a total gain of +3.9 points over S2 alone. The improvements concentrate on the classes where modality complementarity is highest: Shrubland gained +21.9 points (S2 → late) and Grassland gained +5.5 points. Spectrally separable classes that were already strong (Forest, Water, Urban) saw little change.
+**The val-to-test gap is the largest single effect in the project.** Aggregate test mCA is 28–30 points below val mCA across all four models. This is consistent with the DFC2020 benchmark's known cross-region difficulty (the validation and test splits cover different geographies). It also means the absolute test numbers should be read as informative ranges rather than precision figures: "late fusion improves over S2 by roughly 3 mCA points on a hard test set" is more accurate than treating 0.523 as a precise estimate.
 
-- *One class regresses, honestly noted.* Barren is the only class where the dual-encoder model is below the S2-only baseline (−1.4 points). With S1's relatively weak signal on this class and only 2.9 % of training pixels, the SAR encoder appears to inject more noise than signal. This is a known cost of architectural fusion and would be addressed by class-aware gating in a follow-up.
+### Planned ablations and follow-ups
 
-- *Caveat on parameter count.* The late-fusion model has ≈ 26 M parameters versus ≈ 14 M for the other three. Some of its gain may be attributable to capacity rather than architecture. A direct control with a larger single-encoder backbone (e.g., ResNet-34, ~21 M params) is a planned ablation.
-
-### Coming next
-
-- **Phase 7:** All four models evaluated on the held-out 5,128-patch test set. Test-set performance is the answer the project actually exists to provide.
-- **Phase 8 (stretch):** Predictive uncertainty quantification (MC-Dropout) on the best fusion model.
-- **Planned ablations:** larger single-encoder backbone (ResNet-34) to disentangle capacity from architecture; class-aware gating for the Barren regression.
+- **Backbone capacity control.** A single-encoder U-Net with ResNet-34 (~21 M params) to disentangle the late-fusion gain from raw capacity.
+- **Class-aware gating** for Barren and other classes where one modality is informative and the other is not.
+- **Predictive uncertainty** (MC-Dropout or deep ensembles) on the best fusion model, to quantify *when* fusion predictions can be trusted on out-of-distribution regions.
+- **Domain adaptation** for the Wetlands collapse, using either adversarial domain alignment or test-time normalization.
 
 ## Dataset
 
@@ -90,7 +118,7 @@ The 2020 IEEE GRSS Data Fusion Contest dataset provides paired Sentinel-1 SAR an
 | Split | Patches | Modalities per patch |
 | --- | --- | --- |
 | Validation (used for training and validation) | 986 | S1 (2 bands), S2 (13 bands), DFC label (1 band) |
-| Test (held out for final evaluation) | 5,128 | S1 (2 bands), S2 (13 bands), DFC label (1 band) |
+| Test (held out, different geographic region) | 5,128 | S1 (2 bands), S2 (13 bands), DFC label (1 band) |
 
 S1, S2, and label patches with matching IDs are pixel-aligned.
 
@@ -108,16 +136,16 @@ Exploratory analysis across all 986 validation patches produced the dataset stat
 
 `CrossEntropyLoss` requires contiguous indices. The 8 raw DFC class IDs are remapped:
 
-| Train index | Raw DFC ID | Class | Pixel share |
+| Train index | Raw DFC ID | Class | Pixel share (train split) |
 | --- | --- | --- | --- |
-| 0 | 1 | Forest | 9.1 % |
-| 1 | 2 | Shrubland | 5.2 % |
-| 2 | 4 | Grassland | 11.8 % |
-| 3 | 5 | Wetlands | 17.4 % |
-| 4 | 6 | Croplands | 13.0 % |
-| 5 | 7 | Urban | 5.4 % |
-| 6 | 9 | Barren | 2.9 % |
-| 7 | 10 | Water | 35.0 % |
+| 0 | 1 | Forest | 8.95 % |
+| 1 | 2 | Shrubland | 5.33 % |
+| 2 | 4 | Grassland | 11.73 % |
+| 3 | 5 | Wetlands | 17.57 % |
+| 4 | 6 | Croplands | 13.11 % |
+| 5 | 7 | Urban | 5.45 % |
+| 6 | 9 | Barren | 2.90 % |
+| 7 | 10 | Water | 34.96 % |
 
 Mapping follows Schmitt et al. (2020), making results comparable to published baselines. Defined as `RAW_TO_TRAIN_ID` in `src/sar_optical_fusion/data/dataset.py`.
 
@@ -130,24 +158,13 @@ Mapping follows Schmitt et al. (2020), making results comparable to published ba
 | VV | −13.95 | 4.33 | −23.18 | −4.16 |
 | VH | −21.54 | 6.00 | −34.39 | −11.79 |
 
-**S2 (reflectance × 10000, uint16):** per-band means range 638 (B9) to 2370 (B8A); per-band standard deviations 170 (B1) to 1490 (B8A). Full per-band statistics in `dataset_stats.json`.
+**S2 (reflectance × 10000, uint16):** per-band means range from 638 (B9) to 2370 (B8A); per-band standard deviations from 170 (B1) to 1490 (B8A). Full per-band statistics in `dataset_stats.json`.
 
 ### Train/validation split
 
-The 986 validation-set patches are partitioned 80 % train (789) / 20 % validation (197). The 5,128 test patches are held out for Phase 7.
+The 986 validation-set patches are partitioned 80 % train (789) / 20 % validation (197). The 5,128 test patches are held out entirely until final evaluation.
 
 The split is generated by `build_train_val_split` in `src/sar_optical_fusion/data/splits.py` using `seed=53` (pinned as `DEFAULT_SEED`). The seed was selected by evaluating seeds 0–99 on per-class pixel-distribution preservation; seed 53 produces a 0.96 % max class deviation between train and val versus 9.28 % for seed 42. The resulting partition is committed as `src/sar_optical_fusion/data/splits.json` to guarantee identical training data across all four model variants.
-
-| Class | Train % | Val % | Diff |
-| --- | --- | --- | --- |
-| Forest | 8.95 | 9.90 | +0.96 |
-| Shrubland | 5.33 | 4.63 | −0.70 |
-| Grassland | 11.73 | 12.32 | +0.59 |
-| Wetlands | 17.57 | 16.94 | −0.64 |
-| Croplands | 13.11 | 12.59 | −0.52 |
-| Urban | 5.45 | 5.40 | −0.05 |
-| Barren | 2.90 | 3.00 | +0.10 |
-| Water | 34.96 | 35.22 | +0.26 |
 
 ## Tech stack
 
@@ -168,16 +185,31 @@ cd sar-optical-fusion-dfc2020
 uv sync
 ```
 
-Data (~19 GB) must be obtained separately from the [DFC2020 page](https://ieee-dataport.org/competitions/2020-ieee-grss-data-fusion-contest) and placed in `data/` - see [`data/README.md`](data/README.md) for the expected layout.
+Data (~19 GB) must be obtained separately from the [DFC2020 page](https://ieee-dataport.org/competitions/2020-ieee-grss-data-fusion-contest) and placed in `data/`. See [`data/README.md`](data/README.md) for the expected layout.
 
-Run any of the three trained experiments with:
+Train any of the four experiments:
 
 ```bash
-uv run python scripts/train.py experiment=s2_only
 uv run python scripts/train.py experiment=s1_only
+uv run python scripts/train.py experiment=s2_only
 uv run python scripts/train.py experiment=early_fusion
+uv run python scripts/train.py experiment=late_fusion
+```
+
+Evaluate a trained checkpoint on the held-out test set:
+
+```bash
+uv run python scripts/evaluate.py --checkpoint checkpoints/late_fusion/best.pt --num-workers 0
+```
+
+Generate the qualitative prediction figures:
+
+```bash
+uv run python scripts/select_test_patches.py
+uv run python scripts/plot_prediction_grids.py
+uv run python scripts/plot_per_class_comparison.py
 ```
 
 ## License
 
-MIT - see [LICENSE](LICENSE).
+MIT — see [LICENSE](LICENSE).

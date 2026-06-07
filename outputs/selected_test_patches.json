@@ -1,0 +1,20 @@
+{
+  "shrubland_rich": {
+    "patch_id": "p3055",
+    "rationale": "78% Shrubland + 22% Forest. Hard spectral boundary (both vegetated) where SAR structural information should help fusion models draw a sharper class boundary than S2-only.",
+    "class_fractions": {
+      "Forest": 0.22,
+      "Shrubland": 0.78
+    }
+  },
+  "wetlands_heavy": {
+    "patch_id": "p3624",
+    "rationale": "78% Wetlands + 10% Water + 8% Forest. Universal failure mode on the test set.",
+    "class_fractions": {}
+  },
+  "urban_water_mix": {
+    "patch_id": "p2363",
+    "rationale": "48% Water + 45% Urban + 3% Wetlands. Saturated easy case where all four models perform similarly.",
+    "class_fractions": {}
+  }
+}
